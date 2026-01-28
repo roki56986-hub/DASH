@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPJF Dashboard - Professional</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .kpi-glow { box-shadow: 0 0 30px rgba(59, 130, 246, 0.1); }
+        .table-row:hover { background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .priority-high { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 4px solid #ef4444; }
+        .priority-medium { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 border-b border-slate-200/50">
+        <div class="max-w-[1800px] mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">DPJF Dashboard</h1>
+                        <p class="text-sm text-slate-500">Monitoring Pengembangan Kompetensi Pegawai</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs text-slate-500">Terakhir diperbarui</p>
+                        <p class="text-sm font-semibold text-slate-700" id="lastUpdate">-</p>
+                    </div>
+                    <button onclick="refreshData()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1800px] mx-auto px-6 py-8">
+        <!-- Filters Section -->
+        <section class="mb-8 animate-fade-in">
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-slate-800">Filter Data</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-2">Provinsi</label>
+                        <select id="filterProvinsi" onchange="applyFilters()" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-blue-300">
+                            <option value="">Semua Provinsi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-2">Unit Kerja</label>
+                        <select id="filterUnit" onchange="applyFilters()" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-blue-300">
+                            <option value="">Semua Unit Kerja</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-2">Kategori Jabatan</label>
+                        <select id="filterKategori" onchange="applyFilters()" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-blue-300">
+                            <option value="">Semua Kategori</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-2">Status Alumni</label>
+                        <select id="filterStatus" onchange="applyFilters()" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-blue-300">
+                            <option value="">Semua Status</option>
+                            <option value="pernah">Pernah Ikut</option>
+                            <option value="belum">Belum Pernah</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-2">Urutkan</label>
+                        <select id="sortBy" onchange="applyFilters()" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-blue-300">
+                            <option value="nama">Nama (A-Z)</option>
+                            <option value="jumlah">Jumlah Kegiatan ↓</option>
+                            <option value="pelatihan">Pelatihan ↓</option>
+                            <option value="webinar">Webinar ↓</option>
+                            <option value="microlearning">Microlearning ↓</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Cards -->
+        <section class="mb-8 animate-fade-in" style="animation-delay: 0.1s">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Pegawai -->
+                <div class="glass rounded-2xl p-6 card-hover kpi-glow border border-slate-200/50">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-slate-600 to-slate-800 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">TOTAL</span>
+                    </div>
+                    <p class="text-4xl font-bold text-slate-800 mb-1" id="kpiTotal">0</p>
+                    <p class="text-sm text-slate-500 font-medium">Total Pegawai</p>
+                </div>
+
+                <!-- Sudah Ikut -->
+                <div class="glass rounded-2xl p-6 card-hover kpi-glow border border-green-200/50" style="background: linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(220,252,231,0.95) 100%);">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">AKTIF</span>
+                    </div>
+                    <p class="text-4xl font-bold text-green-700 mb-1" id="kpiSudah">0</p>
+                    <p class="text-sm text-green-600 font-medium">Sudah Mengikuti</p>
+                </div>
+
+                <!-- Belum Ikut -->
+                <div class="glass rounded-2xl p-6 card-hover kpi-glow border border-amber-200/50" style="background: linear-gradient(135deg, rgba(255,251,235,0.95) 0%, rgba(254,243,199,0.95) 100%);">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">PENDING</span>
+                    </div>
+                    <p class="text-4xl font-bold text-amber-700 mb-1" id="kpiBelum">0</p>
+                    <p class="text-sm text-amber-600 font-medium">Belum Mengikuti</p>
+                </div>
+
+                <!-- Persentase -->
+                <div class="glass rounded-2xl p-6 card-hover kpi-glow border border-indigo-200/50" style="background: linear-gradient(135deg, rgba(238,242,255,0.95) 0%, rgba(224,231,255,0.95) 100%);">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                        </div>
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">RATE</span>
+                    </div>
+                    <p class="text-4xl font-bold text-indigo-700 mb-1" id="kpiPersen">0%</p>
+                    <p class="text-sm text-indigo-600 font-medium">Persentase Partisipasi</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Jenis Kegiatan KPI -->
+        <section class="mb-8 animate-fade-in" style="animation-delay: 0.15s">
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-slate-800">Ringkasan Jenis Kegiatan</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-5 border border-cyan-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-semibold text-cyan-700">Pelatihan</span>
+                        </div>
+                        <p class="text-3xl font-bold text-cyan-800" id="jkPelatihan">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-semibold text-blue-700">Webinar</span>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-800" id="jkWebinar">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl p-5 border border-violet-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-violet-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-semibold text-violet-700">Microlearning</span>
+                        </div>
+                        <p class="text-3xl font-bold text-violet-800" id="jkMicro">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-5 border border-slate-300">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">Total Kegiatan</span>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800" id="jkTotal">0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts & Analytics Row -->
+        <section class="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in" style="animation-delay: 0.2s">
+            <!-- Stacked Bar Chart -->
+            <div class="lg:col-span-2 glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Sudah vs Belum per Provinsi</h3>
+                </div>
+                <div class="h-80">
+                    <canvas id="chartProvinsi"></canvas>
+                </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Status Pegawai</h3>
+                </div>
+                <div class="h-80 flex items-center justify-center">
+                    <canvas id="chartStatus"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Jenis Kegiatan Chart & Top 5 Provinsi -->
+        <section class="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in" style="animation-delay: 0.25s">
+            <!-- Jenis Kegiatan Bar Chart -->
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Distribusi Jenis Kegiatan</h3>
+                </div>
+                <div class="h-72">
+                    <canvas id="chartJenis"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 5 Provinsi Table -->
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Top 5 Provinsi (Alumni Terbanyak)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-slate-100 to-slate-50">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider rounded-l-lg">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Provinsi</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Sudah</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider rounded-r-lg">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top5Table" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Priority Section -->
+        <section class="mb-8 animate-fade-in" style="animation-delay: 0.3s">
+            <div class="glass rounded-2xl p-6 shadow-xl border border-red-200/50" style="background: linear-gradient(135deg, rgba(254,242,242,0.95) 0%, rgba(254,226,226,0.95) 100%);">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-rose-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-red-800">Provinsi Perlu Prioritas</h3>
+                        <p class="text-sm text-red-600">Provinsi dengan alumni kurang dari 5 orang</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto scrollbar-thin">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-red-100/80">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">Provinsi</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wider">Total</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wider">Sudah</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wider">Belum</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wider">%</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wider">Prioritas</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">Rekomendasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priorityTable" class="divide-y divide-red-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Employee Picker & Details -->
+        <section class="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in" style="animation-delay: 0.35s">
+            <!-- Employee Picker -->
+            <div class="glass rounded-2xl p-6 shadow-xl border border-orange-200/50" style="background: linear-gradient(135deg, rgba(255,247,237,0.95) 0%, rgba(254,215,170,0.95) 100%);">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-orange-800">Pilih Pegawai</h3>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-orange-700 mb-2">Cari Pegawai (Nama | NIP)</label>
+                    <select id="employeePicker" onchange="showEmployeeDetail()" class="w-full px-4 py-3 bg-white border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all appearance-none cursor-pointer">
+                        <option value="">-- Pilih Pegawai --</option>
+                    </select>
+                </div>
+                <div id="selectedEmployee" class="hidden">
+                    <div class="bg-white rounded-xl p-4 border border-orange-200">
+                        <p class="text-sm text-orange-600 font-medium mb-1">Pegawai Terpilih:</p>
+                        <p class="text-lg font-bold text-orange-800" id="selectedName">-</p>
+                        <p class="text-sm text-orange-600" id="selectedNIP">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Activity Details -->
+            <div class="lg:col-span-2 glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Detail Kegiatan Pegawai</h3>
+                </div>
+                <div id="activityEmpty" class="text-center py-12">
+                    <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-slate-400 font-medium">Pilih pegawai untuk melihat detail kegiatan</p>
+                </div>
+                <div id="activityTable" class="hidden overflow-x-auto scrollbar-thin max-h-64">
+                    <table class="w-full">
+                        <thead class="sticky top-0 bg-white">
+                            <tr class="bg-gradient-to-r from-slate-100 to-slate-50">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Jenis</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nama Kegiatan</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityBody" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Employee List Table -->
+        <section class="animate-fade-in" style="animation-delay: 0.4s">
+            <div class="glass rounded-2xl p-6 shadow-xl border border-slate-200/50">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Daftar Pegawai</h3>
+                            <p class="text-sm text-slate-500" id="employeeCount">0 pegawai ditemukan</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportTable()" class="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto scrollbar-thin">
+                    <table class="w-full">
+                        <thead class="sticky top-0">
+                            <tr class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider rounded-l-lg">NIP</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Provinsi</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Unit Kerja</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kategori</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Jumlah</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Pelatihan</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Webinar</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider rounded-r-lg">Micro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+                    <p class="text-sm text-slate-500" id="paginationInfo">Menampilkan 0-0 dari 0</p>
+                    <div class="flex items-center gap-2">
+                        <button onclick="prevPage()" id="btnPrev" disabled class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            ← Prev
+                        </button>
+                        <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium" id="currentPage">1</span>
+                        <button onclick="nextPage()" id="btnNext" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass mt-8 border-t border-slate-200/50">
+        <div class="max-w-[1800px] mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <p class="text-sm text-slate-500">© 2024 DPJF Dashboard - Monitoring Pengembangan Kompetensi</p>
+                <p class="text-sm text-slate-400">Version 2.0 Professional</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample Data
+        const sampleData = {
+            employees: [
+                { nip: "198501012010011001", nama: "Ahmad Susanto", provinsi: "DKI Jakarta", unit: "Kanwil DKI Jakarta", kategori: "Pelaksana", status: "Pernah Ikut", jumlah: 5, pelatihan: 2, webinar: 2, microlearning: 1 },
+                { nip: "198602022011012002", nama: "Budi Santoso", provinsi: "Jawa Barat", unit: "KPP Pratama Bandung", kategori: "Fungsional", status: "Pernah Ikut", jumlah: 8, pelatihan: 3, webinar: 3, microlearning: 2 },
+                { nip: "198703032012013003", nama: "Citra Dewi", provinsi: "Jawa Tengah", unit: "KPP Pratama Semarang", kategori: "Struktural", status: "Belum Pernah", jumlah: 0, pelatihan: 0, webinar: 0, microlearning: 0 },
+                { nip: "198804042013014004", nama: "Deni Wijaya", provinsi: "Jawa Timur", unit: "Kanwil Jawa Timur I", kategori: "Pelaksana", status: "Pernah Ikut", jumlah: 3, pelatihan: 1, webinar: 1, microlearning: 1 },
+                { nip: "198905052014015005", nama: "Eka Putri", provinsi: "Bali", unit: "KPP Pratama Denpasar", kategori: "Fungsional", status: "Pernah Ikut", jumlah: 6, pelatihan: 2, webinar: 2, microlearning: 2 },
+                { nip: "199006062015016006", nama: "Farhan Rahman", provinsi: "Sumatera Utara", unit: "Kanwil Sumatera Utara", kategori: "Pelaksana", status: "Belum Pernah", jumlah: 0, pelatihan: 0, webinar: 0, microlearning: 0 },
+                { nip: "199107072016017007", nama: "Gita Permata", provinsi: "Sumatera Barat", unit: "KPP Pratama Padang", kategori: "Struktural", status: "Pernah Ikut", jumlah: 4, pelatihan: 2, webinar: 1, microlearning: 1 },
+                { nip: "199208082017018008", nama: "Hendra Kusuma", provinsi: "Kalimantan Timur", unit: "Kanwil Kaltim", kategori: "Fungsional", status: "Pernah Ikut", jumlah: 7, pelatihan: 3, webinar: 2, microlearning: 2 },
+                { nip: "199309092018019009", nama: "Indah Sari", provinsi: "Sulawesi Selatan", unit: "KPP Pratama Makassar", kategori: "Pelaksana", status: "Belum Pernah", jumlah: 0, pelatihan: 0, webinar: 0, microlearning: 0 },
+                { nip: "199410102019020010", nama: "Joko Prabowo", provinsi: "DKI Jakarta", unit: "Kanwil DKI Jakarta", kategori: "Struktural", status: "Pernah Ikut", jumlah: 10, pelatihan: 4, webinar: 4, microlearning: 2 },
+                { nip: "199511112020021011", nama: "Kartika Sari", provinsi: "Jawa Barat", unit: "KPP Pratama Bogor", kategori: "Pelaksana", status: "Pernah Ikut", jumlah: 2, pelatihan: 1, webinar: 1, microlearning: 0 },
+                { nip: "199612122021022012", nama: "Lukman Hakim", provinsi: "Jawa Tengah", unit: "Kanwil Jawa Tengah", kategori: "Fungsional", status: "Belum Pernah", jumlah: 0, pelatihan: 0, webinar: 0, microlearning: 0 },
+                { nip: "199713132022023013", nama: "Maya Anggraini", provinsi: "Yogyakarta", unit: "KPP Pratama Yogyakarta", kategori: "Pelaksana", status: "Pernah Ikut", jumlah: 5, pelatihan: 2, webinar: 2, microlearning: 1 },
+                { nip: "199814142023024014", nama: "Nugroho Adi", provinsi: "Banten", unit: "KPP Pratama Tangerang", kategori: "Struktural", status: "Pernah Ikut", jumlah: 9, pelatihan: 3, webinar: 3, microlearning: 3 },
+                { nip: "199915152024025015", nama: "Olivia Rahma", provinsi: "Papua", unit: "Kanwil Papua", kategori: "Fungsional", status: "Belum Pernah", jumlah: 0, pelatihan: 0, webinar: 0, microlearning: 0 },
+            ],
+            activities: [
+                { nip: "198501012010011001", jenis: "Pelatihan", nama: "Pelatihan Dasar Perpajakan", waktu: "2023" },
+                { nip: "198501012010011001", jenis: "Pelatihan", nama: "Pelatihan Leadership", waktu: "2024" },
+                { nip: "198501012010011001", jenis: "Webinar", nama: "Webinar Update Peraturan", waktu: "2023" },
+                { nip: "198501012010011001", jenis: "Webinar", nama: "Webinar Digital Transformation", waktu: "2024" },
+                { nip: "198501012010011001", jenis: "Microlearning", nama: "E-Learning Etika Profesi", waktu: "2024" },
+                { nip: "198602022011012002", jenis: "Pelatihan", nama: "Pelatihan Audit Pajak", waktu: "2023" },
+                { nip: "198602022011012002", jenis: "Webinar", nama: "Webinar Coretax", waktu: "2024" },
+                { nip: "199410102019020010", jenis: "Pelatihan", nama: "Pelatihan Manajemen", waktu: "2024" },
+                { nip: "199410102019020010", jenis: "Pelatihan", nama: "Pelatihan Public Speaking", waktu: "2023" },
+            ]
+        };
+
+        let filteredData = [...sampleData.employees];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Chart instances
+        let chartProvinsi, chartStatus, chartJenis;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initFilters();
+            initCharts();
+            refreshData();
+            updateLastUpdate();
+        });
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function initFilters() {
+            const provinsis = [...new Set(sampleData.employees.map(e => e.provinsi))].sort();
+            const units = [...new Set(sampleData.employees.map(e => e.unit))].sort();
+            const kategoris = [...new Set(sampleData.employees.map(e => e.kategori))].sort();
+
+            const filterProvinsi = document.getElementById('filterProvinsi');
+            const filterUnit = document.getElementById('filterUnit');
+            const filterKategori = document.getElementById('filterKategori');
+
+            provinsis.forEach(p => {
+                filterProvinsi.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+            units.forEach(u => {
+                filterUnit.innerHTML += `<option value="${u}">${u}</option>`;
+            });
+            kategoris.forEach(k => {
+                filterKategori.innerHTML += `<option value="${k}">${k}</option>`;
+            });
+        }
+
+        function initCharts() {
+            // Provinsi Chart
+            const ctxProvinsi = document.getElementById('chartProvinsi').getContext('2d');
+            chartProvinsi = new Chart(ctxProvinsi, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Sudah Ikut',
+                            data: [],
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderColor: 'rgb(34, 197, 94)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Belum Ikut',
+                            data: [],
+                            backgroundColor: 'rgba(251, 191, 36, 0.8)',
+                            borderColor: 'rgb(251, 191, 36)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Status Chart
+            const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+            chartStatus = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pernah Ikut', 'Belum Pernah'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 191, 36, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(251, 191, 36)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // Jenis Kegiatan Chart
+            const ctxJenis = document.getElementById('chartJenis').getContext('2d');
+            chartJenis = new Chart(ctxJenis, {
+                type: 'bar',
+                data: {
+                    labels: ['Pelatihan', 'Webinar', 'Microlearning'],
+                    datasets: [{
+                        label: 'Jumlah Kegiatan',
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(6, 182, 212, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(6, 182, 212)',
+                            'rgb(59, 130, 246)',
+                            'rgb(139, 92, 246)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: true } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function applyFilters() {
+            const provinsi = document.getElementById('filterProvinsi').value;
+            const unit = document.getElementById('filterUnit').value;
+            const kategori = document.getElementById('filterKategori').value;
+            const status = document.getElementById('filterStatus').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            filteredData = sampleData.employees.filter(e => {
+                if (provinsi && e.provinsi !== provinsi) return false;
+                if (unit && e.unit !== unit) return false;
+                if (kategori && e.kategori !== kategori) return false;
+                if (status === 'pernah' && e.status !== 'Pernah Ikut') return false;
+                if (status === 'belum' && e.status !== 'Belum Pernah') return false;
+                return true;
+            });
+
+            // Sort
+            filteredData.sort((a, b) => {
+                switch(sortBy) {
+                    case 'jumlah': return b.jumlah - a.jumlah;
+                    case 'pelatihan': return b.pelatihan - a.pelatihan;
+                    case 'webinar': return b.webinar - a.webinar;
+                    case 'microlearning': return b.microlearning - a.microlearning;
+                    default: return a.nama.localeCompare(b.nama);
+                }
+            });
+
+            currentPage = 1;
+            updateAll();
+        }
+
+        function refreshData() {
+            applyFilters();
+            updateLastUpdate();
+        }
+
+        function updateAll() {
+            updateKPIs();
+            updateJenisKPI();
+            updateCharts();
+            updateTop5();
+            updatePriority();
+            updateEmployeePicker();
+            updateEmployeeTable();
+        }
+
+        function updateKPIs() {
+            const total = filteredData.length;
+            const sudah = filteredData.filter(e => e.status === 'Pernah Ikut').length;
+            const belum = total - sudah;
+            const persen = total > 0 ? ((sudah / total) * 100).toFixed(1) : 0;
+
+            animateNumber('kpiTotal', total);
+            animateNumber('kpiSudah', sudah);
+            animateNumber('kpiBelum', belum);
+            document.getElementById('kpiPersen').textContent = persen + '%';
+        }
+
+        function updateJenisKPI() {
+            const pelatihan = filteredData.reduce((sum, e) => sum + e.pelatihan, 0);
+            const webinar = filteredData.reduce((sum, e) => sum + e.webinar, 0);
+            const micro = filteredData.reduce((sum, e) => sum + e.microlearning, 0);
+            const totalJenis = pelatihan + webinar + micro;
+
+            animateNumber('jkPelatihan', pelatihan);
+            animateNumber('jkWebinar', webinar);
+            animateNumber('jkMicro', micro);
+            animateNumber('jkTotal', totalJenis);
+        }
+
+        function animateNumber(id, target) {
+            const el = document.getElementById(id);
+            const start = parseInt(el.textContent) || 0;
+            const duration = 500;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const current = Math.floor(start + (target - start) * easeOutQuart(progress));
+                el.textContent = current.toLocaleString('id-ID');
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        function easeOutQuart(x) {
+            return 1 - Math.pow(1 - x, 4);
+        }
+
+        function updateCharts() {
+            // Provinsi Chart
+            const provStats = {};
+            filteredData.forEach(e => {
+                if (!provStats[e.provinsi]) provStats[e.provinsi] = { sudah: 0, belum: 0 };
+                if (e.status === 'Pernah Ikut') provStats[e.provinsi].sudah++;
+                else provStats[e.provinsi].belum++;
+            });
+
+            const sortedProv = Object.entries(provStats)
+                .sort((a, b) => (b[1].sudah + b[1].belum) - (a[1].sudah + a[1].belum))
+                .slice(0, 10);
+
+            chartProvinsi.data.labels = sortedProv.map(p => p[0]);
+            chartProvinsi.data.datasets[0].data = sortedProv.map(p => p[1].sudah);
+            chartProvinsi.data.datasets[1].data = sortedProv.map(p => p[1].belum);
+            chartProvinsi.update();
+
+            // Status Chart
+            const sudah = filteredData.filter(e => e.status === 'Pernah Ikut').length;
+            const belum = filteredData.length - sudah;
+            chartStatus.data.datasets[0].data = [sudah, belum];
+            chartStatus.update();
+
+            // Jenis Chart
+            const pelatihan = filteredData.reduce((sum, e) => sum + e.pelatihan, 0);
+            const webinar = filteredData.reduce((sum, e) => sum + e.webinar, 0);
+            const micro = filteredData.reduce((sum, e) => sum + e.microlearning, 0);
+            chartJenis.data.datasets[0].data = [pelatihan, webinar, micro];
+            chartJenis.update();
+        }
+
+        function updateTop5() {
+            const provStats = {};
+            filteredData.forEach(e => {
+                if (!provStats[e.provinsi]) provStats[e.provinsi] = { sudah: 0, total: 0 };
+                provStats[e.provinsi].total++;
+                if (e.status === 'Pernah Ikut') provStats[e.provinsi].sudah++;
+            });
+
+            const sorted = Object.entries(provStats)
+                .sort((a, b) => b[1].sudah - a[1].sudah)
+                .slice(0, 5);
+
+            const tbody = document.getElementById('top5Table');
+            tbody.innerHTML = sorted.map((p, i) => {
+                const persen = ((p[1].sudah / p[1].total) * 100).toFixed(1);
+                return `
+                    <tr class="table-row transition-colors">
+                        <td class="px-4 py-3 text-sm font-bold text-slate-600">${i + 1}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-slate-800">${p[0]}</td>
+                        <td class="px-4 py-3 text-sm text-center"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">${p[1].sudah}</span></td>
+                        <td class="px-4 py-3 text-sm text-center font-medium text-slate-600">${p[1].total}</td>
+                        <td class="px-4 py-3 text-sm text-center font-semibold text-indigo-600">${persen}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updatePriority() {
+            const provStats = {};
+            filteredData.forEach(e => {
+                if (!provStats[e.provinsi]) provStats[e.provinsi] = { sudah: 0, total: 0 };
+                provStats[e.provinsi].total++;
+                if (e.status === 'Pernah Ikut') provStats[e.provinsi].sudah++;
+            });
+
+            const priority = Object.entries(provStats)
+                .filter(p => p[1].sudah < 5)
+                .sort((a, b) => a[1].sudah - b[1].sudah)
+                .slice(0, 5);
+
+            const tbody = document.getElementById('priorityTable');
+            tbody.innerHTML = priority.map(p => {
+                const belum = p[1].total - p[1].sudah;
+                const persen = ((p[1].sudah / p[1].total) * 100).toFixed(1);
+                const isHigh = p[1].sudah === 0;
+                const priorityClass = isHigh ? 'priority-high' : 'priority-medium';
+                const priorityText = isHigh ? 'Tinggi' : 'Sedang';
+                const priorityBadge = isHigh 
+                    ? '<span class="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-bold">TINGGI</span>'
+                    : '<span class="px-2 py-1 bg-amber-500 text-white rounded-full text-xs font-bold">SEDANG</span>';
+                const rekomendasi = isHigh 
+                    ? '0 alumni → Prioritaskan pelatihan perdana'
+                    : `<5 alumni → Tambah kuota pelatihan`;
+
+                return `
+                    <tr class="${priorityClass} transition-colors">
+                        <td class="px-4 py-3 text-sm font-medium text-slate-800">${p[0]}</td>
+                        <td class="px-4 py-3 text-sm text-center font-semibold">${p[1].total}</td>
+                        <td class="px-4 py-3 text-sm text-center"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">${p[1].sudah}</span></td>
+                        <td class="px-4 py-3 text-sm text-center"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full font-semibold">${belum}</span></td>
+                        <td class="px-4 py-3 text-sm text-center font-semibold">${persen}%</td>
+                        <td class="px-4 py-3 text-center">${priorityBadge}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${rekomendasi}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateEmployeePicker() {
+            const picker = document.getElementById('employeePicker');
+            picker.innerHTML = '<option value="">-- Pilih Pegawai --</option>';
+            
+            filteredData.forEach(e => {
+                picker.innerHTML += `<option value="${e.nip}">${e.nama} | ${e.nip}</option>`;
+            });
+        }
+
+        function showEmployeeDetail() {
+            const nip = document.getElementById('employeePicker').value;
+            const selectedDiv = document.getElementById('selectedEmployee');
+            const activityEmpty = document.getElementById('activityEmpty');
+            const activityTable = document.getElementById('activityTable');
+            const activityBody = document.getElementById('activityBody');
+
+            if (!nip) {
+                selectedDiv.classList.add('hidden');
+                activityEmpty.classList.remove('hidden');
+                activityTable.classList.add('hidden');
+                return;
+            }
+
+            const employee = sampleData.employees.find(e => e.nip === nip);
+            if (employee) {
+                document.getElementById('selectedName').textContent = employee.nama;
+                document.getElementById('selectedNIP').textContent = 'NIP: ' + employee.nip;
+                selectedDiv.classList.remove('hidden');
+
+                // Get activities
+                const activities = sampleData.activities.filter(a => a.nip === nip);
+                
+                if (activities.length > 0) {
+                    activityEmpty.classList.add('hidden');
+                    activityTable.classList.remove('hidden');
+                    
+                    activityBody.innerHTML = activities.map(a => {
+                        const jenisColor = {
+                            'Pelatihan': 'bg-cyan-100 text-cyan-700',
+                            'Webinar': 'bg-blue-100 text-blue-700',
+                            'Microlearning': 'bg-violet-100 text-violet-700'
+                        }[a.jenis] || 'bg-gray-100 text-gray-700';
+
+                        return `
+                            <tr class="table-row transition-colors">
+                                <td class="px-4 py-3"><span class="px-3 py-1 ${jenisColor} rounded-full text-xs font-semibold">${a.jenis}</span></td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-800">${a.nama}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">${a.waktu}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    activityEmpty.classList.remove('hidden');
+                    activityTable.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateEmployeeTable() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            const tbody = document.getElementById('employeeTable');
+            tbody.innerHTML = pageData.map(e => {
+                const statusBadge = e.status === 'Pernah Ikut'
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Pernah Ikut</span>'
+                    : '<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">Belum Pernah</span>';
+
+                return `
+                    <tr class="table-row transition-colors">
+                        <td class="px-4 py-3 text-sm font-mono text-slate-600">${e.nip}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-slate-800">${e.nama}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${e.provinsi}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${e.unit}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${e.kategori}</td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                        <td class="px-4 py-3 text-center text-sm font-bold ${e.jumlah > 0 ? 'text-blue-600' : 'text-slate-400'}">${e.jumlah}</td>
+                        <td class="px-4 py-3 text-center text-sm font-semibold ${e.pelatihan > 0 ? 'text-cyan-600' : 'text-slate-300'}">${e.pelatihan}</td>
+                        <td class="px-4 py-3 text-center text-sm font-semibold ${e.webinar > 0 ? 'text-blue-600' : 'text-slate-300'}">${e.webinar}</td>
+                        <td class="px-4 py-3 text-center text-sm font-semibold ${e.microlearning > 0 ? 'text-violet-600' : 'text-slate-300'}">${e.microlearning}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update pagination
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            document.getElementById('employeeCount').textContent = `${filteredData.length} pegawai ditemukan`;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('paginationInfo').textContent = `Menampilkan ${start + 1}-${Math.min(end, filteredData.length)} dari ${filteredData.length}`;
+            
+            document.getElementById('btnPrev').disabled = currentPage === 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateEmployeeTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateEmployeeTable();
+            }
+        }
+
+        function exportTable() {
+            let csv = 'NIP,Nama,Provinsi,Unit Kerja,Kategori,Status,Jumlah,Pelatihan,Webinar,Microlearning\n';
+            filteredData.forEach(e => {
+                csv += `"${e.nip}","${e.nama}","${e.provinsi}","${e.unit}","${e.kategori}","${e.status}",${e.jumlah},${e.pelatihan},${e.webinar},${e.microlearning}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dpjf_dashboard_export.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
