@@ -974,24 +974,6 @@
             a.click();
             URL.revokeObjectURL(url);
         }
-   <script>
-  // Ganti URL di bawah dengan Link CSV dari Tahap 1
-  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRxb06beuSRxF__Ca5JTHekfipSurOuLIMDMd-68w_9B81OPwjf4gTH9JnUmkbaw2A2760Mazw8_uHB/pub?output=csv'; 
-
-  fetch(sheetUrl)
-    .then(response => response.text())
-    .then(csvText => {
-      // Kode ini mengubah CSV jadi Data yang bisa dibaca
-      const rows = csvText.split('\n').map(row => row.split(','));
-      
-      // CONTOH: Menampilkan data baris ke-2, kolom ke-1 ke dalam Dashboard
-      // Pastikan di HTML Anda ada elemen dengan id="data-stok"
-      // document.getElementById('data-stok').innerText = rows[1][1]; 
-      
-      console.log(rows); // Cek console browser untuk melihat datanya masuk
-      alert("Data berhasil ditarik dari Spreadsheet!");
-    })
-    .catch(error => console.error('Error:', error));
 </script>
 </body>
 </html>
